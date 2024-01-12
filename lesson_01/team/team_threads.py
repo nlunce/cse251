@@ -1,27 +1,35 @@
 """
 Course: CSE 251 
 Lesson: L01 Team Activity
-File:   team-solution.py
-Author: Brother Comeau
+File:   team.py
+Author: <Add name here>
 
-Purpose: Find prime numbers.
+Purpose: Find prime numbers
+
+Instructions:
+
+- Don't include any other Python packages or modules
+- Review and follow the team activity instructions (team.md)
 """
 
 from datetime import datetime, timedelta
 import threading
-
+import random
 
 # Include cse 251 common Python files
 from cse251 import *
 
+# Global variable for counting the number of primes found
 prime_count = 0
 numbers_processed = 0
 
 
-def is_prime(n: int):
-    """Primality test using 6k+-1 optimization.
+def is_prime(n):
+    """
+    Primality test using 6k+-1 optimization.
     From: https://en.wikipedia.org/wiki/Primality_test
     """
+
     if n <= 3:
         return n > 1
     if n % 2 == 0 or n % 3 == 0:
@@ -34,14 +42,14 @@ def is_prime(n: int):
     return True
 
 
-def process_range(start, end, lock_prime, lock_processed):
+def thread_function(start, end, lock_prime, lock_processed):
     global prime_count
     global numbers_processed
     for i in range(start, end):
         if is_prime(i):
             with lock_prime:
                 prime_count += 1
-            # print(i, end=", ", flush=True)
+            print(i, end=", ", flush=True)
 
         with lock_processed:
             numbers_processed += 1
@@ -51,40 +59,42 @@ if __name__ == "__main__":
     log = Log(show_terminal=True)
     log.start_timer()
 
+    # TODO 1) Get this program running
+    # TODO 2) move the following for loop into 1 thread
+
+    # TODO 3) change the program to divide the for loop into 10 threads
+    # TODO 4) change range_count to 100007.  Does your program still work?  Can you fix it?
+    # Question: if the number of threads and range_count was random, would your program work?
+
     start = 10000000000
     range_count = 100000
+    number_threads = 10
+    thread_range = range_count // number_threads
+    threads = []
 
-    # Is there a critical section?  TWO of them!!
-    # the prime count variable AND numbers_processed
     lock_prime = threading.Lock()
     lock_processed = threading.Lock()
 
-    number_threads = 10
-    threads = []
-    thread_range = range_count // number_threads
-
-    # Create threads and give each one a range to test
-    for i in range(10):
+    for i in range(number_threads):
         thread_start = start + (thread_range * i)
         thread_end = thread_start + thread_range
-        t = threading.Thread(
-            target=process_range,
+        thread = threading.Thread(
+            target=thread_function,
             args=(thread_start, thread_end, lock_prime, lock_processed),
         )
-        threads.append(t)
+        threads.append(thread)
 
-    # Start all threads
-    for t in threads:
-        t.start()
+    # Start
+    for thread in threads:
+        thread.start()
 
-    # Wait for them to finish
-    for t in threads:
-        t.join()
+    # Join
+    for thread in threads:
+        thread.join()
+
+    print(flush=True)
 
     # Should find 4306 primes
-    log.write("")
-    log.write(f"{range_count = }")
-    log.write(f"{number_threads = }")
     log.write(f"Numbers processed = {numbers_processed}")
-    log.write(f"Primes found = {prime_count}")
+    log.write(f"Primes found      = {prime_count}")
     log.stop_timer("Total time")
