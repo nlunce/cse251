@@ -67,7 +67,7 @@ if __name__ == "__main__":
     # Question: if the number of threads and range_count was random, would your program work?
 
     start = 10000000000
-    range_count = 100000
+    range_count = 100007
     number_threads = 10
     thread_range = range_count // number_threads
     threads = []
