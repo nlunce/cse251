@@ -2,7 +2,10 @@
 Course: CSE 251 
 Lesson: L01 Prove
 File:   prove.py
-Author: <Add name here>
+Author: Nathan Lunceford
+
+This code meets the requirements. I have successfully drawn the shapes with threads and have placed the locks in the correct spaces.
+
 
 Purpose: Drawing with Python Turtle
 
