@@ -120,6 +120,7 @@ def get_names(url_list):
 
 def display_details(log, film_details):
     global call_count
+    log.write("----------------------------------------")
     log.write(f"Title: {film_details['title']}")
     log.write(f"Director: {film_details['director']}")
     log.write(f"Producer: {film_details['producer']}")
