@@ -2,7 +2,7 @@
 Course: CSE 251 
 Lesson: L03 Prove
 File:   prove.py
-Author: <Add name here>
+Author: Nathan Lunceford
 
 Purpose: Video Frame Processing
 
@@ -30,17 +30,18 @@ CPU_COUNT = mp.cpu_count() + 4
 
 # TODO Your final video needs to have 300 processed frames.
 # However, while you are testing your code, set this much lower!
-FRAME_COUNT = 20
+FRAME_COUNT = 300
 
 # RGB values for reference
 RED = 0
 GREEN = 1
 BLUE = 2
 
+
 def create_new_frame(image_file, green_file, process_file):
-    """"
+    """ "
     Creates a new image file from image_file and green_file.
-    
+
     Parameters:
         image_file (str):   The path including name of the image to place on the green screen.
         green_file (str):   The path including name of the green screen image to process.
@@ -48,7 +49,7 @@ def create_new_frame(image_file, green_file, process_file):
     """
 
     # this print() statement is there to help see which frame is being processed
-    print(f'{process_file[-7:-4]}', end=',', flush=True)
+    print(f"{process_file[-7:-4]}", end=",", flush=True)
 
     image_img = Image.open(image_file)
     green_img = Image.open(green_file)
@@ -56,21 +57,24 @@ def create_new_frame(image_file, green_file, process_file):
     # Make Numpy array
     np_img = np.array(green_img)
 
-    # Mask pixels 
-    mask = (np_img[:, :, BLUE] < 120) & (np_img[:, :, GREEN] > 120) & (np_img[:, :, RED] < 120)
+    # Mask pixels
+    mask = (
+        (np_img[:, :, BLUE] < 120)
+        & (np_img[:, :, GREEN] > 120)
+        & (np_img[:, :, RED] < 120)
+    )
 
     # Create mask image
-    mask_img = Image.fromarray((mask*255).astype(np.uint8))
+    mask_img = Image.fromarray((mask * 255).astype(np.uint8))
 
     image_new = Image.composite(image_img, green_img, mask_img)
     image_new.save(process_file)
 
 
-# DONE: Add any functions to need here
 def process_frame(frame_number):
-    image_file = rf'elephant/image{frame_number:03d}.png'
-    green_file = rf'green/image{frame_number:03d}.png'
-    process_file = rf'processed/image{frame_number:03d}.png'
+    image_file = rf"elephant/image{frame_number:03d}.png"
+    green_file = rf"green/image{frame_number:03d}.png"
+    process_file = rf"processed/image{frame_number:03d}.png"
     create_new_frame(image_file, green_file, process_file)
 
 
@@ -81,33 +85,32 @@ def main():
     xaxis_cpus = []
     yaxis_times = []
 
-    # DONE: Process all frames trying 1 cpu ... to CPU_COUNT
-    #       and add add results to xaxis_cpus and yaxis_times
-
+    # TODO Process all frames trying 1 cpu, then 2, then 3, ... to CPU_COUNT
     frames = range(1, FRAME_COUNT + 1)
     for processors in range(1, CPU_COUNT + 1):
         xaxis_cpus.append(processors)
-        start_time = timeit.default_timer()
-        with mp.Pool(processors) as p:
-            p.map(process_frame, frames)
-        runtime = timeit.default_timer() - start_time
-        yaxis_times.append(runtime);
+        timer_start = timeit.default_timer()
+        with mp.Pool(processors) as pool:
+            pool.map(process_frame, frames)
+        time = timeit.default_timer() - timer_start
+        yaxis_times.append(time)
         print()
-        log.write(f'Time for {len(frames)} frames using {processors} processes: {runtime}')
-
+        log.write(f"Time for {len(frames)} frames using {processors} processes: {time}")
     # Log the total time this took
-    log.write(f'Total Time for ALL processing: {timeit.default_timer() - all_process_time}')
+    log.write(
+        f"Total Time for ALL processing: {timeit.default_timer() - all_process_time}"
+    )
 
     # create plot of results and also save it to a PNG file
-    plt.plot(xaxis_cpus, yaxis_times, label=f'{FRAME_COUNT}')
-    
-    plt.title('CPU Core yaxis_times VS CPUs')
-    plt.xlabel('CPU Cores')
-    plt.ylabel('Seconds')
-    plt.legend(loc='best')
+    plt.plot(xaxis_cpus, yaxis_times, label=f"{FRAME_COUNT}")
+
+    plt.title("CPU Core yaxis_times VS CPUs")
+    plt.xlabel("CPU Cores")
+    plt.ylabel("Seconds")
+    plt.legend(loc="best")
 
     plt.tight_layout()
-    plt.savefig(f'Plot for {FRAME_COUNT} frames.png')
+    plt.savefig(f"Plot for {FRAME_COUNT} frames.png")
     plt.show()
 
 
