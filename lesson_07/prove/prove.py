@@ -16,6 +16,7 @@ TODO:
 Add your comments here on the pool sizes that you used for your assignment and why they were the best choices.
 
 I have 6 cores with 12 threads on my computer
+
 PRIME_POOL_SIZE = 12
 - Prime number checking is intensive computational work. Utilizing all twelve pyhsical threads allows for maximizing the processing of these CPU-bound tasks.
 
