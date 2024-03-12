@@ -66,7 +66,7 @@ FAST_SPEED = 0
 current_color_index = 0
 thread_count = 0
 stop = False
-speed = SLOW_SPEED
+speed = FAST_SPEED
 
 
 def get_color():
