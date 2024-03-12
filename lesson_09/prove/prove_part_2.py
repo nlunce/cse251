@@ -2,7 +2,7 @@
 Course: CSE 251 
 Lesson: L09 Prove Part 2
 File:   prove_part_2.py
-Author: <Add name here>
+Author: Nathan 
 
 Purpose: Part 2 of prove 9, finding the path to the end of a maze using recursion.
 
@@ -22,10 +22,24 @@ position:
 What would be your strategy?
 
 <Answer here>
+To update the program so that it shows the route, 
+to the mazes exit I would create a data structure that can be accessed safely 
+by different threads to track the path each thread takes. Every thread would add
+its movements to this structure, labeled with an identifier (ID) to differentiate between paths. 
+Once a thread reaches the end of the maze its path will be identified as the solution.
+
 
 Why would it work?
 
 <Answer here>
+This method is effective as it ensures the consistency of
+operations by using thread safe processes guaranteeing precise
+path mapping in the presence of multiple threads. By focusing on 
+monitoring and showcasing the path of the victorious thread,
+distinguished by its distinct identifier this technique effectively 
+illustrates the successful navigation through the maze utilizing parallel exploration, 
+for enhanced speed and precision.
+
 
 """
 
