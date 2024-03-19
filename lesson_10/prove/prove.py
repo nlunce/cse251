@@ -2,7 +2,7 @@
 Course: CSE 251
 Lesson Week: 10
 File: assignment.py
-Author: <your name>
+Author: Nathan
 
 Purpose: assignment for week 10 - reader writer problem
 
@@ -65,40 +65,109 @@ BUFFER_SIZE = 10
 READERS = 2
 WRITERS = 2
 
+# Define constants used in the shared buffer for control and signaling
+STOP_VALUE = -1  # Special value to signal readers to stop
+NEXT_INDEX = BUFFER_SIZE  # Index in shared buffer to track the next value to be sent
+WRITE_INDEX = BUFFER_SIZE + 1  # Index to keep track of where to write in the buffer
+READ_INDEX = BUFFER_SIZE + 2  # Index to keep track of where to read in the buffer
+RESULT_INDEX = BUFFER_SIZE + 3  # Index to store the result or last value read
+
+
+# Writer process function
+def write(items_to_send, lock, write_sem, read_sem, shared_list):
+    go = True
+    while go:
+        write_sem.acquire()  # Wait for a signal that it's safe to write
+        lock.acquire()  # Lock the shared buffer for exclusive access
+
+        # Determine the next value to write, either incrementing or signaling stop
+        if shared_list[NEXT_INDEX] > items_to_send:
+            next_value = STOP_VALUE
+        else:
+            next_value = shared_list[NEXT_INDEX]
+
+        next_index = shared_list[WRITE_INDEX]  # Where to write the next value
+        shared_list[next_index] = next_value  # Write the value
+
+        # Update indexes or signal stop
+        if next_value == STOP_VALUE:
+            go = False
+        else:
+            shared_list[NEXT_INDEX] += 1
+            shared_list[WRITE_INDEX] = (shared_list[WRITE_INDEX] + 1) % BUFFER_SIZE
+
+        lock.release()  # Release exclusive access
+        read_sem.release()  # Signal that there's new data to read
+
+
+# Reader process function
+def read(lock, write_sem, read_sem, shared_list):
+    go = True
+    while go:
+        read_sem.acquire()  # Wait for a signal that there's data to read
+        lock.acquire()  # Lock the shared buffer for exclusive access
+
+        next_index = shared_list[READ_INDEX]  # Where to read the next value
+        next_value = shared_list[next_index]  # Read the value
+
+        # Check if it's the stop signal or a valid data
+        if next_value == STOP_VALUE:
+            go = False
+        else:
+            shared_list[RESULT_INDEX] = next_value  # Store or process the value
+            print(next_value, end=", ", flush=True)  # Display the value
+            shared_list[READ_INDEX] = (
+                shared_list[READ_INDEX] + 1
+            ) % BUFFER_SIZE  # Update the read index
+
+        lock.release()  # Release exclusive access
+        write_sem.release()  # Signal that there's space to write
+
+
 def main():
+    items_to_send = random.randint(
+        1000, 10000
+    )  # Determine the number of values to send
 
-    # This is the number of values that the writer will send to the reader
-    items_to_send = random.randint(1000, 10000)
+    smm = SharedMemoryManager()  # Manage shared memory across processes
+    smm.start()  # Start the shared memory manager
 
-    smm = SharedMemoryManager()
-    smm.start()
+    shared_list = smm.ShareableList(
+        [0] * (BUFFER_SIZE + 4)
+    )  # Create the shared buffer with extra control spaces
 
-    # TODO - Create a ShareableList to be used between the processes
-    #      - The buffer should be size 10 PLUS at least three other
-    #        values (ie., [0] * (BUFFER_SIZE + 3)).  The extra values
-    #        are used for the head and tail for the circular buffer.
-    #        The another value is the current number that the writers
-    #        need to send over the buffer.  This last value is shared
-    #        between the writers.
-    #        You can add another value to the sharedable list to keep
-    #        track of the number of values received by the readers.
-    #        (ie., [0] * (BUFFER_SIZE + 4))
+    # Initialize synchronization primitives
+    lock = mp.Lock()  # Ensure exclusive access to the shared buffer
+    write_sem = mp.Semaphore(
+        BUFFER_SIZE
+    )  # Control the number of writes based on buffer size
+    read_sem = mp.Semaphore(0)  # Control the number of reads based on data availability
 
-    # TODO - Create any lock(s) or semaphore(s) that you feel you need
+    # Create writer and reader processes
+    writers = [
+        mp.Process(
+            target=write, args=(items_to_send, lock, write_sem, read_sem, shared_list)
+        )
+        for _ in range(WRITERS)
+    ]
+    readers = [
+        mp.Process(target=read, args=(lock, write_sem, read_sem, shared_list))
+        for _ in range(READERS)
+    ]
 
-    # TODO - create reader and writer processes
+    # Start all processes
+    for process in readers + writers:
+        process.start()
 
-    # TODO - Start the processes and wait for them to finish
+    # Wait for all processes to complete
+    for process in readers + writers:
+        process.join()
 
-    print(f'{items_to_send} values sent')
+    print(f"\n\n{items_to_send} values sent")
+    print(f"{shared_list[RESULT_INDEX]} values received")
 
-    # TODO - Display the number of numbers/items received by the reader.
-    #        Can not use "items_to_send", must be a value collected
-    #        by the reader processes.
-    # print(f'{<your variable>} values received')
-
-    smm.shutdown()
+    smm.shutdown()  # Clean up the shared memory manager
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
