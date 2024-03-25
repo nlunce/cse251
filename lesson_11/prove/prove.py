@@ -57,15 +57,17 @@ def cleaner(
     """
     while time.time() - start_time < TIME:
         cleaner_waiting()
-        cleaning_turn_lock.acquire()
-        room_access_lock.acquire()
+        cleaning_turn_lock.acquire()  # Ensure one cleaner at a time
+        room_access_lock.acquire()  # Request exclusive access to the room
 
         print(STARTING_CLEANING_MESSAGE)
         cleaner_cleaning(id)
         print(STOPPING_CLEANING_MESSAGE)
         clean_count.value += 1
-        room_access_lock.release()
+
+        # Release locks
         cleaning_turn_lock.release()
+        room_access_lock.release()
 
 
 def guest(
@@ -84,17 +86,15 @@ def guest(
 
         if guests_in_room.value == 0:  # If no one in the room start the party
             room_access_lock.acquire()
+            print(STARTING_PARTY_MESSAGE)
+            party_count.value += 1
 
         guests_in_room.value += 1
-        if guests_in_room.value == 1:
-            print(STARTING_PARTY_MESSAGE)
-
         guest_partying(id, guests_in_room.value)
         guests_in_room.value -= 1
 
         if guests_in_room.value == 0:
             print(STOPPING_PARTY_MESSAGE)
-            party_count.value += 1
             room_access_lock.release()
 
 
