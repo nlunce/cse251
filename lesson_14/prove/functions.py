@@ -202,7 +202,66 @@ def breadth_fs_pedigree(family_id, tree):
     # TODO - implement breadth first retrieval
     # TODO - Printing out people and families that are retrieved from the server will help debugging
 
-    pass
+    q = queue.Queue()
+    # Root node
+    q.put(family_id)
+
+    while not q.empty():
+        family_id = q.get()
+        family_exists = tree.does_family_exist(family_id)
+        if family_id and not family_exists:
+            # Fetch and process the family by its ID
+            family_request = Request_thread(f"{TOP_API_URL}/family/{family_id}")
+            print(f"Retrieving Family: {family_id}")
+            family_request.start()
+            family_request.join()
+
+            family_data = family_request.get_response()
+            family = Family(family_data)
+            tree.add_family(family)
+
+            # Process husband
+            husband_id = family.get_husband()
+            if husband_id and not tree.does_person_exist(husband_id):
+                person_request = Request_thread(f"{TOP_API_URL}/person/{husband_id}")
+                print(f"   Retrieving person: {husband_id}")
+                person_request.start()
+                person_request.join()
+
+                person_data = person_request.get_response()
+                person = Person(person_data)
+                tree.add_person(person)
+
+                husband_parent_id = person.get_parentid()
+                q.put(husband_parent_id)
+
+            # Process wife
+            wife_id = family.get_wife()
+            if wife_id and not tree.does_person_exist(wife_id):
+                person_request = Request_thread(f"{TOP_API_URL}/person/{wife_id}")
+                print(f"   Retrieving person: {wife_id}")
+                person_request.start()
+                person_request.join()
+
+                person_data = person_request.get_response()
+                person = Person(person_data)
+                tree.add_person(person)
+
+                wife_parent_id = person.get_parentid()
+                q.put(wife_parent_id)
+
+            # Process children
+            child_ids = family.get_children()
+            for child_id in child_ids:
+                if child_id and not tree.does_person_exist(child_id):
+                    person_request = Request_thread(f"{TOP_API_URL}/person/{child_id}")
+                    print(f"   Retrieving person: {child_id}")
+                    person_request.start()
+                    person_request.join()
+
+                    person_data = person_request.get_response()
+                    person = Person(person_data)
+                    tree.add_person(person)
 
 
 # -----------------------------------------------------------------------------
