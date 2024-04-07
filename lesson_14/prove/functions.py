@@ -56,75 +56,141 @@ Extra (Optional) 10% Bonus to speed up part 3
 <Add your comments here>
 
 """
-
 from common import *
 import queue
 
-
 # -----------------------------------------------------------------------------
-# Function to recursively process people
-def recursive_process_person(person_id, tree, processed_families):
-    if tree.does_person_exist(person_id):
+tree_lock = threading.Lock()
+
+def depth_fs_pedigree_unoptimized(family_id, tree):
+    
+    def process_person(person_id, tree):
+        if person_id and not tree.does_person_exist(person_id):
+            person_request = Request_thread(f'{TOP_API_URL}/person/{person_id}')
+            print(f'   Retrieving person: {person_id}')
+            person_request.start()
+            person_request.join()
+            
+            person_data = person_request.get_response()
+            person = Person(person_data)
+            tree.add_person(person)
+            
+
+            person_parent_id = person.get_parentid()
+            # Recursive DFS call for the person's parents
+            if person_parent_id:  
+                depth_fs_pedigree(person_parent_id, tree)
+        else:
+            print(f'   Person already exists in the tree: {person_id}')
+        
+    # Check if the family has been processed
+    if tree.does_family_exist(family_id):
         return
 
-    # Create threaded request for person's data
-    person_request = Request_thread(f"{TOP_API_URL}/person/{person_id}")
-    person_request.start()
-    person_request.join()
-
-    # Extract and process person data
-    person_json = person_request.get_response()
-    if person_json:
-        person_obj = Person(person_json)
-        tree.add_person(person_obj)
-
-        # Depth-first recursion for the person's parental family
-        parent_family_id = person_obj.get_parentid()
-        if parent_family_id and parent_family_id not in processed_families:
-            depth_fs_pedigree(parent_family_id, tree, processed_families)
-
-
-def depth_fs_pedigree(family_id, tree, processed_families=set()):
-    # KEEP this function even if you don't implement it
-    # TODO - implement Depth first retrieval
-    # TODO - Printing out people and families that are retrieved from the server will help debugging
-
-    if family_id in processed_families:
-        return
-
-    processed_families.add(family_id)
-
-    family_request = Request_thread(f"{TOP_API_URL}/family/{family_id}")
+    # Fetch and process the family by its ID
+    family_request = Request_thread(f'{TOP_API_URL}/family/{family_id}')
+    print(f'Retrieving Family: {family_id}')
     family_request.start()
     family_request.join()
 
-    family_json = family_request.get_response()
-    if family_json:
-        family_obj = Family(family_json)
-        if not tree.does_family_exist(family_obj.get_id()):
-            tree.add_family(family_obj)
+    family_data = family_request.get_response()
+    family = Family(family_data)
+    tree.add_family(family)
 
-        # Collect all family member IDs, including husband, wife, and children
-        family_members_ids = [
-            family_obj.get_husband(),
-            family_obj.get_wife(),
-            *family_obj.get_children(),
-        ]
+    # Process the husband
+    husband_id = family.get_husband()
+    if husband_id:
+        process_person(husband_id, tree)
 
-        # Create and start threads for each family member
-        person_threads = []
-        for person_id in family_members_ids:
-            if person_id:
-                thread = threading.Thread(
-                    target=recursive_process_person,
-                    args=(person_id, tree, processed_families),
+    # Process the wife
+    wife_id = family.get_wife()
+    if wife_id:
+        process_person(wife_id, tree)
+
+    # Process children
+    child_ids = family.get_children()
+    for child_id in child_ids:
+        process_person(child_id, tree)
+
+def depth_fs_pedigree(family_id, tree):
+    global tree_lock
+    def process_person(person_id, tree):
+        global tree_lock
+        with tree_lock:
+            person_exists = tree.does_person_exist(person_id)
+        
+        if person_id and not person_exists:
+            person_request = Request_thread(f'{TOP_API_URL}/person/{person_id}')
+            print(f'   Retrieving person: {person_id}')
+            person_request.start()
+            person_request.join()
+            
+            person_data = person_request.get_response()
+            person = Person(person_data)
+            with tree_lock:
+                tree.add_person(person)
+            
+
+            person_parent_id = person.get_parentid()
+            # Recursive DFS call for the person's parents
+            if person_parent_id:  
+                depth_fs_pedigree(person_parent_id, tree)
+        else:
+            print(f'   Person already exists in the tree: {person_id}')
+        
+    # Check if the family has been processed
+    with tree_lock:
+        family_exists = tree.does_family_exist(family_id)
+    if family_exists:
+        return
+
+    # Fetch and process the family by its ID
+    family_request = Request_thread(f'{TOP_API_URL}/family/{family_id}')
+    print(f'Retrieving Family: {family_id}')
+    family_request.start()
+    family_request.join()
+
+    family_data = family_request.get_response()
+    family = Family(family_data)
+    
+    with tree_lock:
+        tree.add_family(family)
+    
+
+    person_threads = []
+    
+    # Process the husband
+    husband_id = family.get_husband()
+    if husband_id:
+        thread = threading.Thread(
+                    target=process_person,
+                    args=(husband_id, tree),
                 )
-                thread.start()
-                person_threads.append(thread)
+        person_threads.append(thread)
+        thread.start()
 
-        # Join threads
-        for thread in person_threads:
-            thread.join()
+    # Process the wife
+    wife_id = family.get_wife()
+    if wife_id:
+        thread = threading.Thread(
+                    target=process_person,
+                    args=(wife_id, tree),
+                )
+        person_threads.append(thread)
+        thread.start()
+
+    # Process children
+    child_ids = family.get_children()
+    for child_id in child_ids:
+        thread = threading.Thread(
+                    target=process_person,
+                    args=(child_id, tree),
+                )
+        person_threads.append(thread)
+        thread.start()
+        
+    for person_thread in person_threads:
+        person_thread.join()
 
 
 # -----------------------------------------------------------------------------
@@ -134,7 +200,6 @@ def breadth_fs_pedigree(family_id, tree):
     # TODO - Printing out people and families that are retrieved from the server will help debugging
 
     pass
-
 
 # -----------------------------------------------------------------------------
 def breadth_fs_pedigree_limit5(family_id, tree):
