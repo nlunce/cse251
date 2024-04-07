@@ -1,0 +1,57 @@
+Current: active threads / max count: 1 / 1
+Request: /
+Sending: {"start_family_id": 5000417386}
+Current: active threads / max count: 1 / 1
+Request: /start/6
+Creating family tree with 6 generations...
+Number of people  : 473
+Number of families: 63
+Sending: {"status":"OK"}
+Current: active threads / max count: 1 / 1
+Request: /end
+################################################################################
+Total number of people  : 473
+Total number of families: 63
+Number of generations   : 6
+Families were requested in this order:
+
+Total number of API calls: 2
+Final thread count (max count): 1
+################################################################################
+Sending: {"status": "OK", "people": 473, "families": 63, "api": 2, "threads": 1}
+Current: active threads / max count: 1 / 1
+Request: /start/6
+Creating family tree with 6 generations...
+Number of people  : 449
+Number of families: 63
+Sending: {"status":"OK"}
+Current: active threads / max count: 1 / 1
+Request: /end
+################################################################################
+Total number of people  : 449
+Total number of families: 63
+Number of generations   : 6
+Families were requested in this order:
+
+Total number of API calls: 2
+Final thread count (max count): 1
+################################################################################
+Sending: {"status": "OK", "people": 449, "families": 63, "api": 2, "threads": 1}
+Current: active threads / max count: 1 / 1
+Request: /start/6
+Creating family tree with 6 generations...
+Number of people  : 490
+Number of families: 63
+Sending: {"status":"OK"}
+Current: active threads / max count: 1 / 1
+Request: /end
+################################################################################
+Total number of people  : 490
+Total number of families: 63
+Number of generations   : 6
+Families were requested in this order:
+
+Total number of API calls: 2
+Final thread count (max count): 1
+################################################################################
+Sending: {"status": "OK", "people": 490, "families": 63, "api": 2, "threads": 1}

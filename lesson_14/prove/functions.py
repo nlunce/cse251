@@ -1,7 +1,7 @@
 """
 Course: CSE 251, week 14
 File: functions.py
-Author: <your name>
+Author: Nathan Lunceford
 
 Instructions:
 
@@ -56,8 +56,10 @@ Extra (Optional) 10% Bonus to speed up part 3
 <Add your comments here>
 
 """
+
 from common import *
 import queue
+
 
 # -----------------------------------------------------------------------------
 def depth_fs_pedigree(family_id, tree):
@@ -67,6 +69,7 @@ def depth_fs_pedigree(family_id, tree):
 
     pass
 
+
 # -----------------------------------------------------------------------------
 def breadth_fs_pedigree(family_id, tree):
     # KEEP this function even if you don't implement it
@@ -74,6 +77,7 @@ def breadth_fs_pedigree(family_id, tree):
     # TODO - Printing out people and families that are retrieved from the server will help debugging
 
     pass
+
 
 # -----------------------------------------------------------------------------
 def breadth_fs_pedigree_limit5(family_id, tree):

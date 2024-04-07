@@ -1,0 +1,75 @@
+20:40:08| 
+
+20:40:08| #############################################
+20:40:08| Depth First Search: 6 generations
+20:40:08| #############################################
+20:40:08| 0.00032288
+20:40:09| 
+
+
+20:40:09| ************* TREE DISPLAY *************
+20:40:09| 
+20:40:09| Number of people                    : 0
+20:40:09| Number of families                  : 0
+20:40:09| Max generations                     : 0
+20:40:09| People connected to starting family : 0
+20:40:09| 
+20:40:09| total_time                    : 0.00032
+20:40:09| Generations                   : 6
+20:40:09| People % Families / second    : 0.00000
+20:40:09| 
+20:40:09| STATS        Retrieved | Server details
+20:40:09| People  :            0 |            473
+20:40:09| Families:            0 |             63
+20:40:09| API Calls            : 2
+20:40:09| Max number of threads: 1
+20:40:09| 
+
+20:40:09| #############################################
+20:40:09| Breadth First Search: 6 generations
+20:40:09| #############################################
+20:40:09| 0.00015668
+20:40:09| 
+
+
+20:40:09| ************* TREE DISPLAY *************
+20:40:09| 
+20:40:09| Number of people                    : 0
+20:40:09| Number of families                  : 0
+20:40:09| Max generations                     : 0
+20:40:09| People connected to starting family : 0
+20:40:09| 
+20:40:09| total_time                    : 0.00016
+20:40:09| Generations                   : 6
+20:40:09| People % Families / second    : 0.00000
+20:40:09| 
+20:40:09| STATS        Retrieved | Server details
+20:40:09| People  :            0 |            449
+20:40:09| Families:            0 |             63
+20:40:09| API Calls            : 2
+20:40:09| Max number of threads: 1
+20:40:09| 
+
+20:40:09| #############################################
+20:40:09| Breadth First Search limit 5: 6 generations
+20:40:09| #############################################
+20:40:09| 0.00006706
+20:40:10| 
+
+
+20:40:10| ************* TREE DISPLAY *************
+20:40:10| 
+20:40:10| Number of people                    : 0
+20:40:10| Number of families                  : 0
+20:40:10| Max generations                     : 0
+20:40:10| People connected to starting family : 0
+20:40:10| 
+20:40:10| total_time                    : 0.00007
+20:40:10| Generations                   : 6
+20:40:10| People % Families / second    : 0.00000
+20:40:10| 
+20:40:10| STATS        Retrieved | Server details
+20:40:10| People  :            0 |            490
+20:40:10| Families:            0 |             63
+20:40:10| API Calls            : 2
+20:40:10| Max number of threads: 1
