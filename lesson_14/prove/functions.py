@@ -1,8 +1,7 @@
 """
 Course: CSE 251, week 14
 File: functions.py
-Author: <your name>
-
+Author: Nathan Lunceford
 Instructions:
 
 Depth First Search
