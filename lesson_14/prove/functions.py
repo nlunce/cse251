@@ -50,8 +50,11 @@ thread safety for the tree data structure i used a lock.
 
 Describe how to speed up part 2
 
-<Add your comments here>
-
+I sped up the breadth-first search function by streamlining the process of fetching and adding individuals to the tree.
+At first each family member's data was fetched and processed sequentially within the main loop, 
+leading to repeated code and inefficient handling of network requests. In the optimized version, I introduced a dedicated 
+function, request_and_add_person_to_tree, to encapsulate the logic for fetching and adding a person, eliminating redundancy 
+and improving code clarity. 
 
 Extra (Optional) 10% Bonus to speed up part 3
 
@@ -126,7 +129,7 @@ def depth_fs_pedigree(family_id, tree):
 
         if person_id and not person_exists:
             person_request = Request_thread(f"{TOP_API_URL}/person/{person_id}")
-            print(f"   Retrieving person: {person_id}")
+            # print(f"   Retrieving person: {person_id}")
             person_request.start()
             person_request.join()
 
@@ -140,7 +143,8 @@ def depth_fs_pedigree(family_id, tree):
             if person_parent_id:
                 depth_fs_pedigree(person_parent_id, tree)
         else:
-            print(f"   Person already exists in the tree: {person_id}")
+            # print(f"   Person already exists in the tree: {person_id}")
+            pass
 
     # Check if the family has been processed
     with tree_lock:
@@ -150,7 +154,7 @@ def depth_fs_pedigree(family_id, tree):
 
     # Fetch and process the family by its ID
     family_request = Request_thread(f"{TOP_API_URL}/family/{family_id}")
-    print(f"Retrieving Family: {family_id}")
+    # print(f"Retrieving Family: {family_id}")
     family_request.start()
     family_request.join()
 
@@ -197,7 +201,7 @@ def depth_fs_pedigree(family_id, tree):
 
 
 # -----------------------------------------------------------------------------
-def breadth_fs_pedigree(family_id, tree):
+def breadth_fs_pedigree_unoptimized(family_id, tree):
     # KEEP this function even if you don't implement it
     # TODO - implement breadth first retrieval
     # TODO - Printing out people and families that are retrieved from the server will help debugging
@@ -262,6 +266,97 @@ def breadth_fs_pedigree(family_id, tree):
                     person_data = person_request.get_response()
                     person = Person(person_data)
                     tree.add_person(person)
+
+
+# Requests and adds a person's information to the tree if not already present.
+def request_and_add_person_to_tree(person_id, tree):
+    # Avoid adding the person if they are already in the tree.
+    if tree.does_person_exist(person_id):
+        return
+
+    # Initialize a request to fetch the person's information from the server.
+    person_request = Request_thread(f"{TOP_API_URL}/person/{person_id}")
+    person_request.start()
+    person_request.join()
+
+    # If the request fetched data successfully, add the person to the tree.
+    if person_request.get_response() is not None:
+        new_person = Person(person_request.get_response())
+        tree.add_person(new_person)
+
+
+# Creates a queue for managing the order of family processing.
+family_queue = queue.Queue()
+
+
+def breadth_fs_pedigree(family_id, tree):
+    # Enqueue the initial family ID to start processing.
+    family_queue.put(family_id)
+
+    # List to track threads that are processing families.
+    processing_threads = []
+    while not family_queue.empty():
+        # Process all families currently enqueued.
+        while not family_queue.empty():
+            # For each family, spawn a thread to process it.
+            family_thread = threading.Thread(
+                target=process_family, args=(family_queue.get(), tree, True, True)
+            )
+            family_thread.start()
+            processing_threads.append(family_thread)  # Track the thread.
+
+        # Wait for all threads to finish processing.
+        for thread in processing_threads:
+            thread.join()
+
+
+# Fetches and processes a family's information based on its ID.
+def process_family(family_id, tree, use_queue, allow_threading):
+    # Initialize a request to fetch the family's information from the server.
+    family_request = Request_thread(f"{TOP_API_URL}/family/{family_id}")
+    family_request.start()
+    family_request.join()
+
+    # Proceed only if the request successfully fetched the family's information.
+    if family_request.get_response() is None:
+        return
+
+    # Create a family object and add it to the tree.
+    new_family = Family(family_request.get_response())
+    tree.add_family(new_family)
+
+    # Compile a list of IDs for all members in the family.
+    family_member_ids = [
+        new_family.get_husband(),
+        new_family.get_wife(),
+        *new_family.get_children(),
+    ]
+    if allow_threading:
+        # If threading is allowed, process each family member in separate threads.
+        member_threads = []
+        for member_id in family_member_ids:
+            member_thread = threading.Thread(
+                target=request_and_add_person_to_tree, args=(member_id, tree)
+            )
+            member_thread.start()
+            member_threads.append(member_thread)
+
+        # Wait for all member threads to finish.
+        for thread in member_threads:
+            thread.join()
+    else:
+        # Process each family member sequentially without threading.
+        for member_id in family_member_ids:
+            request_and_add_person_to_tree(member_id, tree)
+
+    # If this process should use the queue, enqueue parent families for further processing.
+    if use_queue:
+        husband_info = tree.get_person(new_family.get_husband())
+        wife_info = tree.get_person(new_family.get_wife())
+        if husband_info and husband_info.get_parentid():
+            family_queue.put(husband_info.get_parentid())
+        if wife_info and wife_info.get_parentid():
+            family_queue.put(wife_info.get_parentid())
 
 
 # -----------------------------------------------------------------------------
